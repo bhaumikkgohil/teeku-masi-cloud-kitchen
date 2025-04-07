@@ -18,6 +18,7 @@ export default function UpdateMenuPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
   const router = useRouter();
 
   const categoryOrder = [
@@ -75,74 +76,64 @@ export default function UpdateMenuPage() {
     fetchMenuItems();
   }, []);
 
-  const handleUpdateItemWithTransition = async (item, category) => {
-    try {
-      await handleUpdateItem(item, category);
-    } catch (error) {
-      console.error(
-        "Error in handleUpdateItemWithTransition:",
-        error?.message || error
-      );
-      setError("Failed to update item. Please check the console for details.");
-    }
-  };
-
   const handleUpdateItem = async (item, category) => {
+    setUpdatingItemId(item.id);
+    setError("");
+
     try {
       // Validate inputs
       if (!item.name || !item.description || !item.price) {
         setError("Name, description, and price are required.");
+        setUpdatingItemId(null);
         return;
       }
 
-      // Update Firestore
-      const itemRef = doc(db, "menuItems", category, "items", item.id);
-      await updateDoc(itemRef, {
+      // Prepare the update data
+      const updateData = {
         name: item.name,
         description: item.description,
         price: parseFloat(item.price),
-      });
+      };
 
-      // If the ID is being updated, create a new document and delete the old one
-      if (item.id !== item.newId) {
+      // If the ID is being changed
+      if (item.id !== item.newId && item.newId) {
+        // Create new document with new ID
         const newItemRef = doc(db, "menuItems", category, "items", item.newId);
-        await setDoc(newItemRef, {
-          name: item.name,
-          description: item.description,
-          price: parseFloat(item.price),
-        });
-        await deleteDoc(itemRef);
+        await setDoc(newItemRef, updateData);
+
+        // Delete old document
+        const oldItemRef = doc(db, "menuItems", category, "items", item.id);
+        await deleteDoc(oldItemRef);
+
+        // Update state with new ID
+        setMenuItemsByCategory((prev) => ({
+          ...prev,
+          [category]: prev[category].map((i) =>
+            i.id === item.id ? { ...updateData, id: item.newId } : i
+          ),
+        }));
+      } else {
+        // Regular update without ID change
+        const itemRef = doc(db, "menuItems", category, "items", item.id);
+        await updateDoc(itemRef, updateData);
+
+        // Update state
+        setMenuItemsByCategory((prev) => ({
+          ...prev,
+          [category]: prev[category].map((i) =>
+            i.id === item.id ? { ...i, ...updateData } : i
+          ),
+        }));
       }
 
-      // Update state
-      setMenuItemsByCategory((prevItems) => {
-        const updatedItems = { ...prevItems };
-
-        // Ensure the category exists
-        if (!updatedItems[category]) {
-          console.error(`Category ${category} not found in prevItems`);
-          return prevItems;
-        }
-
-        // Update the item in the category
-        updatedItems[category] = updatedItems[category].map((i) =>
-          i.id === item.id ? { ...i, ...item, id: item.newId || i.id } : i
-        );
-
-        return updatedItems;
-      });
-
-      // Show success popup
+      // Show success
       setShowSuccessPopup(true);
-
-      // Hide the popup and reload the page after 2.5 seconds
-      setTimeout(() => {
-        setShowSuccessPopup(false);
-        window.location.reload();
-      }, 2500);
+      setTimeout(() => setShowSuccessPopup(false), 2500);
     } catch (error) {
-      console.error("Error updating item:", error?.message || error);
-      setError("Failed to update item. Please check the console for details.");
+      console.error("Update error:", error);
+      setError("Failed to update item. Please try again.");
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
@@ -151,40 +142,29 @@ export default function UpdateMenuPage() {
       const itemRef = doc(db, "menuItems", category, "items", item.id);
       await deleteDoc(itemRef);
 
-      setMenuItemsByCategory((prevItems) => {
-        const updatedItems = { ...prevItems };
-        if (updatedItems[category]) {
-          updatedItems[category] = updatedItems[category].filter(
-            (i) => i.id !== item.id
-          );
-        }
-        return updatedItems;
-      });
+      setMenuItemsByCategory((prev) => ({
+        ...prev,
+        [category]: prev[category].filter((i) => i.id !== item.id),
+      }));
     } catch (error) {
-      console.error("Error deleting item:", error);
+      console.error("Delete error:", error);
+      setError("Failed to delete item.");
     }
-
-    setTimeout(() => {
-      setBlinkItemId(null);
-      setDeletingItemId(null);
-    }, 1500);
   };
 
   const goToAdminDashboard = () => {
     router.push("/admin-dashboard");
   };
 
-  const SuccessPopup = () => {
-    return (
-      <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <p className="text-green-600 text-xl font-semibold">
-            Item updated successfully!
-          </p>
-        </div>
+  const SuccessPopup = () => (
+    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <p className="text-green-600 text-xl font-semibold">
+          Item updated successfully!
+        </p>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -199,10 +179,10 @@ export default function UpdateMenuPage() {
             Admin Dashboard
           </button>
         </div>
+
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         {loading ? (
           <p>Loading menu items...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
         ) : (
           categoryOrder.map((category) => {
             if (menuItemsByCategory[category]) {
@@ -213,7 +193,7 @@ export default function UpdateMenuPage() {
                   </h2>
                   <table className="min-w-full table-auto">
                     <thead>
-                      <tr className="bg-gray-100 ">
+                      <tr className="bg-gray-100">
                         <th className="py-2 px-4 border-b w-14">ID</th>
                         <th className="py-2 px-4 border-b w-2/12">Name</th>
                         <th className="py-2 px-4 border-b w-6/12">
@@ -231,17 +211,14 @@ export default function UpdateMenuPage() {
                               type="text"
                               value={item.newId || item.id}
                               onChange={(e) =>
-                                setMenuItemsByCategory((prevItems) => {
-                                  const updatedItems = { ...prevItems };
-                                  updatedItems[category] = updatedItems[
-                                    category
-                                  ].map((i) =>
+                                setMenuItemsByCategory((prev) => ({
+                                  ...prev,
+                                  [category]: prev[category].map((i) =>
                                     i.id === item.id
                                       ? { ...i, newId: e.target.value }
                                       : i
-                                  );
-                                  return updatedItems;
-                                })
+                                  ),
+                                }))
                               }
                               className="border px-2 py-1 w-10 rounded"
                             />
@@ -251,17 +228,14 @@ export default function UpdateMenuPage() {
                               type="text"
                               value={item.name}
                               onChange={(e) =>
-                                setMenuItemsByCategory((prevItems) => {
-                                  const updatedItems = { ...prevItems };
-                                  updatedItems[category] = updatedItems[
-                                    category
-                                  ].map((i) =>
+                                setMenuItemsByCategory((prev) => ({
+                                  ...prev,
+                                  [category]: prev[category].map((i) =>
                                     i.id === item.id
                                       ? { ...i, name: e.target.value }
                                       : i
-                                  );
-                                  return updatedItems;
-                                })
+                                  ),
+                                }))
                               }
                               className="w-full border px-2 py-1 rounded"
                             />
@@ -271,17 +245,14 @@ export default function UpdateMenuPage() {
                               type="text"
                               value={item.description}
                               onChange={(e) =>
-                                setMenuItemsByCategory((prevItems) => {
-                                  const updatedItems = { ...prevItems };
-                                  updatedItems[category] = updatedItems[
-                                    category
-                                  ].map((i) =>
+                                setMenuItemsByCategory((prev) => ({
+                                  ...prev,
+                                  [category]: prev[category].map((i) =>
                                     i.id === item.id
                                       ? { ...i, description: e.target.value }
                                       : i
-                                  );
-                                  return updatedItems;
-                                })
+                                  ),
+                                }))
                               }
                               className="w-full border px-2 py-1 rounded"
                             />
@@ -291,17 +262,14 @@ export default function UpdateMenuPage() {
                               type="number"
                               value={item.price}
                               onChange={(e) =>
-                                setMenuItemsByCategory((prevItems) => {
-                                  const updatedItems = { ...prevItems };
-                                  updatedItems[category] = updatedItems[
-                                    category
-                                  ].map((i) =>
+                                setMenuItemsByCategory((prev) => ({
+                                  ...prev,
+                                  [category]: prev[category].map((i) =>
                                     i.id === item.id
                                       ? { ...i, price: e.target.value }
                                       : i
-                                  );
-                                  return updatedItems;
-                                })
+                                  ),
+                                }))
                               }
                               className="w-full border px-2 py-1 rounded"
                             />
@@ -310,11 +278,17 @@ export default function UpdateMenuPage() {
                             <div className="flex space-x-2 justify-center">
                               <button
                                 onClick={() => handleUpdateItem(item, category)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                                disabled={updatingItemId === item.id}
+                                className={`bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded ${
+                                  updatingItemId === item.id
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`}
                               >
-                                Update
+                                {updatingItemId === item.id
+                                  ? "Updating..."
+                                  : "Update"}
                               </button>
-
                               <button
                                 onClick={() => handleDeleteItem(item, category)}
                                 className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"

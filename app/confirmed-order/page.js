@@ -2,6 +2,8 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
 import Footer from "../components/footer";
 import Navbar from "../components/navbar";
 import { useCart } from "../context/cartContext";
@@ -12,19 +14,13 @@ export default function ConfirmedOrder() {
   const [orderId, setOrderId] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const router = useRouter();
-  const orderProcessedRef = useRef(false); // Using ref for immediate checks
+
+  const { width, height } = useWindowSize(); // get current window size for confetti
+  const orderProcessedRef = useRef(false);
 
   useEffect(() => {
-    // Guard against empty cart
-    if (!cart || cart.length === 0) {
-      router.push("/menu");
-      return;
-    }
-
     const processOrder = async () => {
-      // Double-check guard
       if (orderProcessedRef.current) return;
       orderProcessedRef.current = true;
 
@@ -41,12 +37,11 @@ export default function ConfirmedOrder() {
           return;
         }
 
-        // Additional check in localStorage (persists across page reloads)
         const orderKey = `order_${user.uid}_${cart.length}_${JSON.stringify(
           cart
         )}`;
-        if (localStorage.getItem(orderKey)) {
-          console.log("Order already processed");
+        if (localStorage.getItem(orderKey) === "completed") {
+          router.push("/my-orders");
           return;
         }
 
@@ -94,39 +89,27 @@ export default function ConfirmedOrder() {
           updatedAt: serverTimestamp(),
         };
 
-        // Mark as processing in localStorage before Firebase operation
         localStorage.setItem(orderKey, "processing");
 
-        const docRef = await addDoc(collection(db, "orders"), orderData);
-
-        // Update localStorage with success status
+        await addDoc(collection(db, "orders"), orderData);
         localStorage.setItem(orderKey, "completed");
-
-        // Clear session storage
         sessionStorage.removeItem("checkoutFormData");
 
         setOrderId(generatedOrderId);
         setOrderDetails(orderData);
         clearCart();
-      } catch (error) {
-        console.error("Order creation failed:", error);
-        setError("Failed to create order. Please try again.");
-        // Remove the processing flag on failure
-        localStorage.removeItem(orderKey);
+      } catch (err) {
+        console.error("Order creation failed:", err);
+        router.push("/menu-checkout");
       } finally {
         setLoading(false);
       }
     };
 
     processOrder();
+  }, [cart, clearCart, router]);
 
-    return () => {
-      // Cleanup if component unmounts
-      orderProcessedRef.current = false;
-    };
-  }, [cart, router, clearCart]);
-
-  if (loading) {
+  if (loading || !orderDetails) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -143,68 +126,78 @@ export default function ConfirmedOrder() {
     );
   }
 
-  if (!orderDetails) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">Order Failed</h1>
-            <p className="text-lg">There was an issue processing your order.</p>
-            <button
-              onClick={() => router.push("/menu")}
-              className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
-            >
-              Back to Menu
-            </button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Confetti
+        width={width}
+        height={height}
+        numberOfPieces={250}
+        recycle={false}
+      />
       <Navbar />
       <main className="flex-grow p-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-green-600 mb-2">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-4">
+              <div className="bg-green-100 rounded-full p-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold text-green-600 mb-2">
               Order Confirmed!
             </h1>
-            <p className="text-lg">Thank you for your order.</p>
-            <p className="text-gray-600 mt-2">Order ID: {orderId}</p>
+            <p className="text-gray-700 text-lg">Thank you for your order.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Order ID: <span className="font-semibold">{orderId}</span>
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {/* Order Summary */}
             <div>
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
+              <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
                 Order Summary
               </h2>
               <div className="space-y-4">
                 {orderDetails.items.map((item) => (
-                  <div key={item.id} className="flex justify-between">
+                  <div key={item.id} className="flex justify-between text-sm">
                     <div>
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        Qty: {item.quantity}
-                      </p>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-gray-500">Qty: {item.quantity}</p>
                     </div>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <p className="font-semibold">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 space-y-2 border-t pt-4">
+              <div className="mt-6 space-y-2 border-t pt-4 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>${orderDetails.subtotal.toFixed(2)}</span>
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">
+                    ${orderDetails.subtotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax (5%):</span>
-                  <span>${orderDetails.tax.toFixed(2)}</span>
+                  <span className="text-gray-600">Tax (5%):</span>
+                  <span className="font-medium">
+                    ${orderDetails.tax.toFixed(2)}
+                  </span>
                 </div>
-                <div className="flex justify-between font-bold text-lg mt-2">
+                <div className="flex justify-between text-lg mt-2 font-bold text-gray-900">
                   <span>Total:</span>
                   <span>${orderDetails.total.toFixed(2)}</span>
                 </div>
@@ -213,7 +206,7 @@ export default function ConfirmedOrder() {
 
             {/* Order Status */}
             <div>
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
+              <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
                 Order Status
               </h2>
               <div className="flex items-center mb-6">
@@ -235,21 +228,25 @@ export default function ConfirmedOrder() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg">{orderDetails.status}</h3>
-                  <p className="text-gray-600">Your order has been received</p>
+                  <p className="text-gray-600 text-sm">
+                    Your order has been received
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">What's next?</h3>
-                <p className="text-gray-700">
-                  We're preparing your order. You'll receive updates on your
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                <h3 className="font-semibold mb-2 text-gray-700">
+                  What’s next?
+                </h3>
+                <p className="text-sm text-gray-600">
+                  We’re preparing your order. You’ll receive updates on your
                   order status.
                 </p>
               </div>
 
               <button
                 onClick={() => router.push("/my-orders")}
-                className="mt-6 w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg transition"
+                className="mt-6 w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl shadow-md text-lg font-semibold transition"
               >
                 View All Orders
               </button>

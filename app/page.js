@@ -57,7 +57,7 @@ export default function HomePage() {
                 Teeku Masi's Cloud Kitchen
               </h1>
               <p className="text-xl text-green-100 mb-8 max-w-3xl mx-auto">
-                Authentic Indian home-style meals delivered with care in Canada
+                Authentic Indian home-style meals delivered with care in Calgary
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">

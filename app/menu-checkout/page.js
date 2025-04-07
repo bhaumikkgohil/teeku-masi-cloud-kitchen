@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Footer from "../components/footer";
@@ -6,7 +7,7 @@ import Navbar from "../components/navbar";
 import { useCart } from "../context/cartContext";
 
 export default function MenuCheckout() {
-  const { cart, clearCart } = useCart();
+  const { cart } = useCart();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -67,166 +68,281 @@ export default function MenuCheckout() {
   const { subtotal, tax, total } = calculateTotal();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-      <main className="flex-grow p-6">
-        <h1 className="text-3xl font-bold text-center mb-6">Checkout</h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex max-h-full flex-col md:flex-row"
-        >
-          {/* Left Side: Personal Info */}
-          <div className="flex-1 space-y-6 max-h-full overflow-y-auto pr-0 md:pr-6">
-            <h3 className="text-lg font-semibold">
-              Name <span className="text-red-500">*</span>
-            </h3>
-            <div className="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0 mb-2">
-              <div className="w-full md:w-1/2">
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-              <div className="w-full md:w-1/2">
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-            </div>
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex-grow p-6 max-w-7xl mx-auto w-full"
+      >
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column - Form */}
+          <div className="lg:w-2/3">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+            >
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Complete Your Order
+              </h1>
+              <p className="text-gray-500 mb-8">
+                Secure checkout powered by Teeku Masi's
+              </p>
 
-            {/* Address Section */}
-            <h3 className="text-lg font-semibold">
-              Address <span className="text-red-500">*</span>
-            </h3>
-            <div className="flex flex-col space-y-2 mb-2">
-              <input
-                type="text"
-                name="addressLine1"
-                placeholder="Address Line 1"
-                value={formData.addressLine1}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md text-md"
-                required
-              />
-              <input
-                type="text"
-                name="addressLine2"
-                placeholder="Address Line 2 (Optional)"
-                value={formData.addressLine2}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md text-md"
-              />
-            </div>
-            <div className="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0 mb-6">
-              <div className="w-full md:w-1/2">
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-              <div className="w-full md:w-1/2">
-                <input
-                  type="text"
-                  name="zipcode"
-                  placeholder="Zipcode"
-                  value={formData.zipcode}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-            </div>
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Information */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                    <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                      1
+                    </span>
+                    Personal Information
+                  </h2>
 
-            {/* Contact Section */}
-            <h3 className="text-lg font-semibold">
-              Contact <span className="text-red-500">*</span>
-            </h3>
-            <div className="flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0 mb-6">
-              <div className="w-full md:w-1/2">
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-              <div className="w-full md:w-1/2">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md text-md"
-                  required
-                />
-              </div>
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Shipping Address */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                    <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                      2
+                    </span>
+                    Shipping Address
+                  </h2>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Street Address *
+                    </label>
+                    <input
+                      type="text"
+                      name="addressLine1"
+                      value={formData.addressLine1}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Apt/Suite (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="addressLine2"
+                      value={formData.addressLine2}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Postal Code *
+                      </label>
+                      <input
+                        type="text"
+                        name="zipcode"
+                        value={formData.zipcode}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Contact Information */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                    <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                      3
+                    </span>
+                    Contact Information
+                  </h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              </form>
+            </motion.div>
           </div>
 
-          {/* Order Summary */}
-          <div className="w-full md:w-1/3 mt-6 md:mt-0 md:ml-6">
-            <div className="p-6 bg-white rounded-lg shadow-lg sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+          {/* Right Column - Order Summary */}
+          <div className="lg:w-1/3">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 sticky top-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Order Summary
+              </h2>
+
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex justify-between text-lg">
-                    <div className="truncate max-w-[60%]">
-                      <span>{item.name}</span>
-                      <span className="text-sm text-gray-600 ml-1">
-                        x{item.quantity}
-                      </span>
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-start pb-4 border-b border-gray-100"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 rounded-md bg-green-50 flex items-center justify-center text-green-600 mr-4">
+                        <span className="text-lg">{item.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-800">
+                          {item.name}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Qty: {item.quantity}
+                        </p>
+                      </div>
                     </div>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium">
+                      CAD${(item.price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 space-y-2 border-t pt-4">
+
+              <div className="mt-6 space-y-3 border-t border-gray-200 pt-6">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">CAD${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax (5%):</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span className="text-gray-600">Tax (5%)</span>
+                  <span className="font-medium">CAD${tax.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-lg mt-2">
-                  <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
+                <div className="flex justify-between text-lg font-bold mt-4 pt-2 border-t border-gray-200">
+                  <span>Total</span>
+                  <span className="text-green-600">CAD${total.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="flex justify-center mt-6">
-                <button
-                  type="submit"
-                  className="bg-green-500 hover:bg-green-600 text-white text-lg px-6 py-3 rounded-lg w-full transition"
+
+              <motion.button
+                type="submit"
+                onClick={handleSubmit}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full mt-8 bg-gradient-to-r from-green-600 to-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+              >
+                Place Order - CAD${total.toFixed(2)}
+              </motion.button>
+
+              <div className="mt-4 flex items-center justify-center space-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  Place Order
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                <span className="text-xs text-gray-500">
+                  Secure SSL Encryption
+                </span>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </form>
-      </main>
+        </div>
+      </motion.main>
+
       <Footer />
     </div>
   );

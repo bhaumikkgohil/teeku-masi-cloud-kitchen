@@ -7,25 +7,25 @@ export default function Footer() {
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 px-6 text-center"
+      className="bg-gradient-to-r from-green-800 to-green-500 text-white py-4 px-4 text-center"
     >
       <div className="max-w-6xl mx-auto">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.2 }}
           viewport={{ once: true }}
-          className="text-sm"
+          className="text-sm text-green-100"
         >
-          &copy; {new Date().getFullYear()} Teeku Masi's Cloud Kitchen. All
-          rights reserved.
+          &copy; {new Date().getFullYear()} Teeku Masi's Tiffin. All rights
+          reserved.
         </motion.p>
 
         <motion.div
-          className="flex justify-center space-x-4 mt-4 text-xs text-gray-400"
+          className="flex justify-center space-x-3 mt-2 text-xs text-green-200"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.4 }}
           viewport={{ once: true }}
         >
           <a href="#" className="hover:text-white transition-colors">
@@ -37,7 +37,7 @@ export default function Footer() {
           </a>
           <span>•</span>
           <a href="#" className="hover:text-white transition-colors">
-            Contact Us
+            Contact
           </a>
         </motion.div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 import { getAuth } from "firebase/auth";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Footer from "../components/footer";
@@ -143,185 +144,343 @@ export default function OrderDetailsPage() {
   const extraTiffins = subscriptionType === "Weekly" ? "One" : "Four";
 
   return (
-    <div className="flex-row">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-      <main className="flex justify-center ">
-        <div className="w-full flex space-x-8 p-1 px-10">
-          <div className="w-full lg:w-7/12 p-4 lg:p-6 border rounded-lg shadow-lg">
-            <h3 className="text-2xl font-bold mb-4">Enter Your Details</h3>
 
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Your Name"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.userName && (
-              <p className="text-red-500 text-sm">{errors.userName}</p>
-            )}
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex-grow p-6 max-w-7xl mx-auto w-full"
+      >
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column - Form */}
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="w-full lg:w-7/12"
+          >
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Complete Your Order
+              </h2>
+              <p className="text-gray-500 mb-6">
+                Secure checkout powered by Teeku Masi's
+              </p>
 
-            <input
-              type="tel"
-              value={userPhone}
-              onChange={handlePhoneChange}
-              placeholder="Your Phone Number"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.userPhone && (
-              <p className="text-red-500 text-sm">{errors.userPhone}</p>
-            )}
+              {/* Personal Information */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                  <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                    1
+                  </span>
+                  Personal Information
+                </h3>
 
-            <h3 className="text-2xl font-bold mb-1">Enter Your Address</h3>
-            <input
-              type="text"
-              value={addressLine1}
-              onChange={(e) => setAddressLine1(e.target.value)}
-              placeholder="Address Line 1"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.addressLine1 && (
-              <p className="text-red-500 text-sm">{errors.addressLine1}</p>
-            )}
-
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="City"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.city && (
-              <p className="text-red-500 text-sm">{errors.city}</p>
-            )}
-
-            <input
-              type="text"
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              placeholder="Province"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.province && (
-              <p className="text-red-500 text-sm">{errors.province}</p>
-            )}
-
-            <input
-              type="text"
-              value={zipcode}
-              onChange={(e) => setZipcode(e.target.value)}
-              placeholder="Zipcode"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.zipcode && (
-              <p className="text-red-500 text-sm">{errors.zipcode}</p>
-            )}
-
-            <div className="mb-1">
-              <select
-                value={cityQuarter}
-                onChange={(e) => setCityQuarter(e.target.value)}
-                className="border px-3 py-2 w-full"
-              >
-                <option value="">Select a quarter</option>
-                <option value="Downtown">Downtown</option>
-                <option value="NE">NE</option>
-                <option value="NW">NW</option>
-                <option value="SE">SE</option>
-                <option value="SW">SW</option>
-              </select>
-              {errors.cityQuarter && (
-                <p className="text-red-500 text-sm">{errors.cityQuarter}</p>
-              )}
-            </div>
-
-            <h3 className="text-2xl font-bold mb-1">Start Date</h3>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border px-3 py-2 mb-1 w-full"
-            />
-            {errors.startDate && (
-              <p className="text-red-500 text-sm">{errors.startDate}</p>
-            )}
-
-            {startDate && (
-              <div className="mb-1">
-                <p className="text-lg">
-                  Estimated End Date: <strong>{endDate}</strong> with{" "}
-                  <strong>
-                    {subscriptionType === "monthly"
-                      ? "20 + 4 (free)"
-                      : "5 + 1 (free)"}
-                  </strong>{" "}
-                  tiffins delivered.
-                </p>
-              </div>
-            )}
-
-            <textarea
-              value={mealPreferences}
-              onChange={(e) => setMealPreferences(e.target.value)}
-              placeholder="Specify meal preferences (optional)"
-              className="border px-3 py-2 mb-1 w-full"
-            />
-          </div>
-
-          <div className="w-5/12 p-6  border rounded-lg shadow-lg">
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold mb-4">Summary</h3>
-              <div className="space-y-2">
-                <div className="flex text-xl justify-between">
-                  <p>{subscriptionType} Subscription :</p>
-                  <p>
-                    <strong>CAD ${price}</strong>
-                  </p>
-                </div>
-                <div className="flex justify-between">
-                  <div className="flex flex-col">
-                    <p className="text-xl ">{extraTiffins} Extra Tiffin(s) :</p>
-                    <p>(promotional offer on subscriptions)</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    />
+                    {errors.userName && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.userName}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xl">
-                    <strong>Free</strong>
-                  </p>
-                </div>
 
-                <div className="flex text-xl justify-between">
-                  <p>Shipping:</p>
-                  <p>
-                    <strong>Free</strong>
-                  </p>
-                </div>
-                <div className="flex text-xl justify-between">
-                  <p>Tax (5%):</p>
-                  <p>
-                    <strong>CAD ${(price * 0.05).toFixed(2)}</strong>
-                  </p>
-                </div>
-                <div className="flex text-xl justify-between">
-                  <p>Total:</p>
-                  <p>
-                    <strong>CAD ${(price + price * 0.05).toFixed(2)}</strong>
-                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={userPhone}
+                      onChange={handlePhoneChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    />
+                    {errors.userPhone && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.userPhone}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handlePayment}
-                disabled={Object.keys(errors).length > 0} // Disable if there are errors
-                className={`bg-green-500 hover:bg-green-600 text-white text-xl py-2 px-4 rounded-full text-center justify-center block ${
-                  Object.keys(errors).length > 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                Pay Now
-              </button>
+
+              {/* Shipping Address */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                  <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                    2
+                  </span>
+                  Shipping Address
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Street Address *
+                    </label>
+                    <input
+                      type="text"
+                      value={addressLine1}
+                      onChange={(e) => setAddressLine1(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    />
+                    {errors.addressLine1 && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.addressLine1}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      />
+                      {errors.city && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.city}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Province *
+                      </label>
+                      <input
+                        type="text"
+                        value={province}
+                        onChange={(e) => setProvince(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      />
+                      {errors.province && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.province}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Postal Code *
+                      </label>
+                      <input
+                        type="text"
+                        value={zipcode}
+                        onChange={(e) => setZipcode(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      />
+                      {errors.zipcode && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.zipcode}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Neighborhood *
+                      </label>
+                      <select
+                        value={cityQuarter}
+                        onChange={(e) => setCityQuarter(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      >
+                        <option value="">Select your area</option>
+                        <option value="Downtown">Downtown</option>
+                        <option value="NE">NE</option>
+                        <option value="NW">NW</option>
+                        <option value="SE">SE</option>
+                        <option value="SW">SW</option>
+                      </select>
+                      {errors.cityQuarter && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.cityQuarter}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Preferences */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                  <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+                    3
+                  </span>
+                  Delivery Preferences
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    />
+                    {errors.startDate && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.startDate}
+                      </p>
+                    )}
+                  </div>
+
+                  {startDate && (
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <p className="text-green-800">
+                        <strong>Delivery Schedule:</strong>{" "}
+                        {subscriptionType === "Weekly"
+                          ? "5 weekdays + 1 FREE Saturday"
+                          : "20 weekdays + 4 FREE Saturdays"}
+                      </p>
+                      <p className="text-green-800 mt-1">
+                        <strong>Estimated End Date:</strong> {endDate}
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Meal Preferences (Optional)
+                    </label>
+                    <textarea
+                      value={mealPreferences}
+                      onChange={(e) => setMealPreferences(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                      rows="3"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Right Column - Order Summary */}
+          <motion.div
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-full lg:w-5/12"
+          >
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 sticky top-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Order Summary
+              </h2>
+
+              <div className="space-y-6">
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h3 className="font-semibold text-green-800 mb-2">
+                    {subscriptionType === "Weekly" ? "Weekly" : "Monthly"}{" "}
+                    Subscription
+                  </h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">
+                      {subscriptionType === "Weekly"
+                        ? "5 weekdays + 1 FREE Saturday"
+                        : "20 weekdays + 4 FREE Saturdays"}
+                    </span>
+                    <span className="font-bold">CAD${price}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 border-t border-gray-200 pt-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium">CAD${price}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax (5%)</span>
+                    <span className="font-medium">
+                      CAD${(price * 0.05).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t border-gray-200">
+                    <span>Total</span>
+                    <span className="text-green-600">
+                      CAD${(price * 1.05).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handlePayment}
+                  disabled={Object.keys(errors).length > 0}
+                  whileHover={{
+                    scale: Object.keys(errors).length > 0 ? 1 : 1.02,
+                  }}
+                  whileTap={{
+                    scale: Object.keys(errors).length > 0 ? 1 : 0.98,
+                  }}
+                  className={`w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all ${
+                    Object.keys(errors).length > 0
+                      ? "opacity-70 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  Complete Payment
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 ml-2 inline"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </motion.button>
+
+                <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 mt-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Secure SSL Encryption</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </main>
+      </motion.main>
+
       <Footer />
     </div>
   );

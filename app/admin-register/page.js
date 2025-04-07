@@ -19,7 +19,7 @@ export default function AdminRegisterPage() {
   const router = useRouter();
 
   const generateCode = () => {
-    return Math.floor(10000 + Math.random() * 90000).toString(); // 5-digit random code
+    return Math.floor(10000 + Math.random() * 90000).toString();
   };
 
   const handleRegister = async (e) => {
@@ -27,23 +27,18 @@ export default function AdminRegisterPage() {
     setError("");
     setSuccess("");
 
-    // Basic validation
     if (!firstName || !lastName || !email || !password || !securityCode) {
-      setError("All fields are required.");
+      setError("All fields are required");
       return;
     }
 
-    // Validate the security code
     if (securityCode !== "1511") {
-      setError("Invalid security code.");
+      setError("Invalid security code");
       return;
     }
 
     try {
-      // Create user in Firebase Authentication
       await createUserWithEmailAndPassword(auth, email, password);
-
-      // Generate a 5-digit code and save admin details in Firestore
       const code = generateCode();
       await addDoc(collection(db, "admins"), {
         firstName,
@@ -52,104 +47,171 @@ export default function AdminRegisterPage() {
         code,
       });
 
-      setGeneratedCode(code); // Display the generated code
+      setGeneratedCode(code);
       setSuccess("Admin registered successfully!");
       setTimeout(() => {
         router.push("/admin-dashboard");
-      }, 8000);
+      }, 3000);
     } catch (error) {
-      console.error("Error registering admin:", error);
-      setError("Failed to register admin. Please try again.");
+      console.error("Registration error:", error);
+      setError(error.message || "Registration failed. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-orange-50">
       <Navbar />
-      <main className="flex-grow flex flex-col justify-center items-center px-6">
-        <h2 className="text-3xl font-bold mb-6">Admin Registration</h2>
-        <form className="w-full max-w-md" onSubmit={handleRegister}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="firstName">
-              First Name
-            </label>
-            <input
-              type="text"
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2 rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="lastName">
-              Last Name
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2 rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2 rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2 rounded"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="securityCode">
-              Security Code
-            </label>
-            <input
-              type="password"
-              id="securityCode"
-              value={securityCode}
-              onChange={(e) => setSecurityCode(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2 rounded"
-            />
+
+      <main className="flex-grow flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header with kitchen-themed gradient */}
+          <div className="bg-gradient-to-r from-orange-400 to-amber-500 p-4 text-center">
+            <h1 className="text-2xl font-bold text-white">
+              Cloud Kitchen Portal
+            </h1>
+            <p className="text-amber-100 mt-2">Admin Registration</p>
           </div>
 
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          {success && (
-            <div className="mb-4">
-              <p className="text-green-500 text-sm mb-2">
-                {success} Your employee code is:{" "}
-                <strong>{generatedCode}</strong>
-              </p>
+          {/* Form */}
+          <form className="p-8" onSubmit={handleRegister}>
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 flex items-center">
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-100">
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 mr-2 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="font-medium">{success}</span>
+                </div>
+                <p className="mt-2 text-sm">
+                  Your employee code:{" "}
+                  <span className="font-mono font-bold text-amber-600">
+                    {generatedCode}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                  placeholder="Enter first name"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                  placeholder="Enter last name"
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                  placeholder="your@email.com"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Security Code
+                </label>
+                <input
+                  type="password"
+                  value={securityCode}
+                  onChange={(e) => setSecurityCode(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                  placeholder="Enter security code"
+                />
+              </div>
             </div>
-          )}
 
-          {!success && (
-            <button
-              type="submit"
-              className="bg-gray-900 hover:bg-gray-600 text-white py-2 px-4 rounded-full w-full"
-            >
-              Register
-            </button>
-          )}
-        </form>
+            {!success && (
+              <button
+                type="submit"
+                className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium rounded-lg hover:shadow-md transition-all hover:from-orange-600 hover:to-amber-600 focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+              >
+                Register Admin
+              </button>
+            )}
+          </form>
+
+          {/* Footer */}
+          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 text-center text-sm text-gray-500">
+            <p>
+              Already have an account?{" "}
+              <button
+                onClick={() => router.push("/admin-login")}
+                className="text-amber-600 font-medium hover:underline"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   );

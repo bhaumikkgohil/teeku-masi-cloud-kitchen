@@ -1,5 +1,6 @@
 "use client";
 import { collection, getDocs } from "firebase/firestore";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Footer from "../components/footer";
@@ -10,10 +11,10 @@ import { db } from "../utils/firebase";
 export default function MenuPage() {
   const [addedItems, setAddedItems] = useState({});
   const [menuCategories, setMenuCategories] = useState({});
+  const [activeCategory, setActiveCategory] = useState("");
   const router = useRouter();
   const { cart, setCart } = useCart();
 
-  // Custom category order for display
   const categoryOrder = [
     "appetizers",
     "snacks",
@@ -25,39 +26,43 @@ export default function MenuPage() {
     "beverages",
   ];
 
-  // Mapping category to their capitalized version for UI
   const categoryDisplayNames = {
     appetizers: "Appetizers",
     snacks: "Snacks",
-    "vegetarian main course": "Vegetarian Main Course",
-    "non vegetarian main course": "Non Vegetarian Main Course",
-    breads: "Breads",
-    rices: "Rices",
-    sides: "Sides",
+    "vegetarian main course": "Vegetarian Mains",
+    "non vegetarian main course": "Non-Veg Mains",
+    breads: "Artisan Breads",
+    rices: "Signature Rices",
+    sides: "Accompaniments",
     beverages: "Beverages",
+  };
+
+  const categoryIcons = {
+    appetizers: "🍢",
+    snacks: "🍟",
+    "vegetarian main course": "🥗",
+    "non vegetarian main course": "🍗",
+    breads: "🍞",
+    rices: "🍚",
+    sides: "🥣",
+    beverages: "☕",
   };
 
   useEffect(() => {
     const fetchMenuCategories = async () => {
       try {
         const fetchedCategories = {};
-
-        // Fetch categories from the menuCategories collection
         const categoriesSnapshot = await getDocs(
           collection(db, "menuCategories")
         );
 
-        // For each category, fetch its items
         for (const categoryDoc of categoriesSnapshot.docs) {
           const categoryName = categoryDoc.id;
           const categoryItems = [];
-
-          // Fetch items from the menuItems/{categoryName}/items subcollection
           const itemsSnapshot = await getDocs(
             collection(db, "menuItems", categoryName, "items")
           );
 
-          // Push the items to the category
           itemsSnapshot.forEach((itemDoc) => {
             categoryItems.push({
               id: itemDoc.id,
@@ -65,8 +70,10 @@ export default function MenuPage() {
             });
           });
 
-          // Set the category and its items in the state
           fetchedCategories[categoryName] = categoryItems;
+          if (!activeCategory && categoryItems.length) {
+            setActiveCategory(categoryName);
+          }
         }
 
         setMenuCategories(fetchedCategories);
@@ -95,139 +102,167 @@ export default function MenuPage() {
 
   const handleAddToCart = (item) => {
     addToCart(item);
-    setAddedItems((prev) => ({
-      ...prev,
-      [item.id]: true, // Mark this specific item as added
-    }));
-
-    // Reset back to "Add to Cart" after 1.5 seconds for the specific item
-    setTimeout(() => {
-      setAddedItems((prev) => ({
-        ...prev,
-        [item.id]: false, // Reset the added state for this item
-      }));
-    }, 1500);
-  };
-
-  const removeFromCart = (itemId) => {
-    setCart(
-      (prevCart) =>
-        prevCart
-          .map((cartItem) =>
-            cartItem.id === itemId
-              ? { ...cartItem, quantity: cartItem.quantity - 1 } // Reduce quantity
-              : cartItem
-          )
-          .filter((cartItem) => cartItem.quantity > 0) // Remove only if quantity is 0
+    setAddedItems((prev) => ({ ...prev, [item.id]: true }));
+    setTimeout(
+      () => setAddedItems((prev) => ({ ...prev, [item.id]: false })),
+      1500
     );
   };
 
-  const goToCheckout = () => {
-    router.push("/checkout"); // Redirect to checkout page
+  const removeFromCart = (itemId) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((cartItem) =>
+          cartItem.id === itemId
+            ? { ...cartItem, quantity: cartItem.quantity - 1 }
+            : cartItem
+        )
+        .filter((cartItem) => cartItem.quantity > 0)
+    );
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Navbar with cart */}
-      <Navbar
-        cart={cart}
-        setCart={setCart}
-        addToCart={addToCart}
-        removeFromCart={removeFromCart}
-      />
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 to-white">
+      <Navbar />
 
-      {/* Main Content Layout */}
-      <div className="flex flex-grow">
-        {/* Sidebar with Styled Categories */}
-        <aside className="w-1/6 p-4 h-screen border-r-2 border-gray-400 flex flex-col items-start overflow-y-auto md:flex sticky top-0">
-          <h2 className="text-xl font-bold mb-4">Categories</h2>
-          <ul className="space-y-2">
-            {categoryOrder.map(
-              (category) =>
-                menuCategories[category] && ( // Check if there are items for this category
-                  <li
-                    key={category}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 font-semibold text-gray-700 w-full"
-                  >
-                    <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-sm">
-                      {category[0].toUpperCase()}
-                    </span>
-                    <a href={`#${category}`} className="hover:underline">
-                      {categoryDisplayNames[category]}
-                    </a>
-                  </li>
-                )
-            )}
-          </ul>
+      {/* Main Content with scroll adjustment */}
+      <div className="flex flex-col lg:flex-row pt-16">
+        {" "}
+        {/* Added pt-16 to push content below navbar */}
+        {/* Categories Sidebar - Now with larger text */}
+        <aside
+          className="w-full lg:w-80 p-4 lg:p-6 lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 overflow-y-auto"
+          style={{ top: "4rem" }} /* Matches navbar height */
+        >
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold mb-4 text-green-700">
+              {" "}
+              {/* Increased from text-xl */}
+              Categories
+            </h2>
+            <ul className="space-y-2">
+              {categoryOrder.map(
+                (category) =>
+                  menuCategories[category] && (
+                    <motion.li
+                      key={category}
+                      whileHover={{ x: 3 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <a
+                        href={`#${category}`}
+                        onClick={() => setActiveCategory(category)}
+                        className={`flex items-center p-3 rounded-lg text-base transition-all ${
+                          activeCategory === category
+                            ? "bg-green-600 text-white font-medium"
+                            : "text-gray-700 hover:bg-green-50"
+                        }`}
+                      >
+                        <span className="mr-3 text-lg">
+                          {categoryIcons[category]}
+                        </span>
+                        <span className="truncate">
+                          {categoryDisplayNames[category]}
+                        </span>
+                      </a>
+                    </motion.li>
+                  )
+              )}
+            </ul>
+          </div>
         </aside>
+        {/* Menu Content - Adjusted scroll positioning */}
+        <main className="flex-grow p-4 lg:p-8">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-bold mb-8 text-green-700"
+          >
+            La Carte
+          </motion.h1>
 
-        {/* Menu Items */}
-        <main className="flex-grow p-6">
-          <h1 className="text-3xl font-bold text-center mb-6">Menu</h1>
-
-          {/* Menu Sections */}
           {categoryOrder.map(
             (category) =>
-              menuCategories[category] && ( // Check if there are items for this category
-                <div key={category} id={category} className="mb-8">
-                  <h2 className="text-2xl font-bold border-b pb-2 mb-4">
-                    {categoryDisplayNames[category]}
-                  </h2>
+              menuCategories[category] && (
+                <motion.section
+                  key={category}
+                  id={category}
+                  className="mb-12 scroll-mt-24"
+                >
+                  <div className="flex items-center mb-6">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-xl mr-3 text-green-800">
+                      {categoryIcons[category]}
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      {categoryDisplayNames[category]}
+                    </h2>
+                  </div>
 
-                  {/* Horizontal List Layout */}
                   <div className="space-y-4">
                     {menuCategories[category].map((item) => (
-                      <div
+                      <motion.div
                         key={item.id}
-                        className="flex justify-between items-center border p-4 rounded-lg shadow-sm bg-white"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
                       >
-                        <div className="flex flex-col">
-                          <h3 className="text-lg font-bold text-gray-900">
-                            {item.name}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {item.description}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <span className="text-lg font-semibold text-gray-800">
-                            ${item.price}
-                          </span>
-                          <button
-                            onClick={() => handleAddToCart(item)}
-                            className="bg-green-500 hover:bg-green-600 text-white text-lg px-4 py-2 rounded-lg transition relative z-10"
-                            style={{ width: "fit-content" }} // Keep button width based on content
-                          >
-                            <span
-                              className={`transition-all duration-500 ease-in-out flex justify-center items-center w-full`}
-                              style={{ opacity: addedItems[item.id] ? 0 : 1 }} // Hide text when tick is shown
-                            >
-                              Add to Cart
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {item.name}
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              {item.description}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-3 ml-4">
+                            <span className="font-medium text-green-700 whitespace-nowrap">
+                              ${item.price}
                             </span>
-                            <span
-                              className={`transition-all duration-500 ease-in-out flex justify-center items-center w-full absolute top-2 left-0 ${
+                            <motion.button
+                              onClick={() => handleAddToCart(item)}
+                              className={`relative px-4 py-2 rounded-lg font-medium overflow-hidden ${
                                 addedItems[item.id]
-                                  ? "opacity-100"
-                                  : "opacity-0"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-green-600 text-white hover:bg-green-700"
                               }`}
-                              style={{ zIndex: addedItems[item.id] ? 1 : -1 }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              <span className="animate-ping text-lg">
-                                Added!!
-                              </span>
-                            </span>
-                          </button>
+                              <AnimatePresence mode="wait">
+                                {addedItems[item.id] ? (
+                                  <motion.span
+                                    key="added"
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 1.2 }}
+                                    className="absolute inset-0 flex items-center justify-center"
+                                  >
+                                    ✓
+                                  </motion.span>
+                                ) : (
+                                  <motion.span
+                                    key="add"
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                  >
+                                    Add
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                          </div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.section>
               )
           )}
         </main>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
